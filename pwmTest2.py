@@ -1,3 +1,7 @@
+from pandas import read_pickle
+import RPi.GPIO as GPIO
+import time
+
 hiC = 0
 reset = 0
 
