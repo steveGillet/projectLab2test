@@ -24,40 +24,74 @@ wallLeft = 0
 wallRight = 0
 reset = 0
 turnLeft = 0
+turnRight = 0
 turnWindow = 0
 turning = 0
 turnStop = 0
 turnLock = 1
 turnLockOff = 0
+state = "forward"
+forwardClear = 0
 
 while True:
-    if(reset == 900):
-        if(wallLeft < 100 and wallLeft > 90 and turnLock == 0):
-            turnLeft += 1
-        if(wallLeft < 86 and wallFront < 100 and wallFront > 90):
-            turnLockOff += 1
-            if(turnLockOff == 2):
-                turnLock = 0
-        if(turnStop > 2):
-            turning = 0
-            turnStop = 0
+
+    noWallFront = wallFront > 86 and wallFront <= 102
+    isWallFront = not noWallFront
+    noWallLeft = wallLeft > 86 and wallLeft <= 102
+    isWallLeft = not noWallLeft
+    noWallRight = wallRight > 86 and wallRight <= 102
+    isWallRight = not noWallRight
+
+
+    if(state == "left"):
+        GPIO.output(frontLED, 0)
+        GPIO.output(leftLED, 1)
+        GPIO.output(rightLED, 0)
+        if(forwardClear > 2):
+            forwardClear = 0
+            state = "forward"
             turnLock = 1
-            GPIO.output(leftLED, 0)
-            GPIO.output(frontLED, 1)
-        if(turning == 1 and wallFront < 100 and wallFront > 90):
-            turnStop += 1
-        #if(wallFront > 100):
-        #   turnLeft += 1
+    elif(state == "forward"):
+        GPIO.output(frontLED, 1)
+        GPIO.output(leftLED, 0)
+        GPIO.output(rightLED, 0)
         if(turnLeft > 4):
-            GPIO.output(leftLED, 1)
-            GPIO.output(frontLED, 0)
-            turning = 1
+            state = "left"
+        elif(turnRight > 4):
+            state = "right"
+    elif(state == "right"):
+        GPIO.output(frontLED, 0)
+        GPIO.output(leftLED, 0)
+        GPIO.output(rightLED, 1)
+        if(forwardClear > 2):
+            forwardClear = 0
+            state = "forward"
+
+    if(reset == 900):
+        if(noWallLeft and not turnLock):
+            turnLeft += 1
+        elif(isWallLeft and noWallFront):
+            turnLockOff += 1
+        elif(isWallLeft and isWallFront):
+            if(isWallRight):
+                turnLeft += 1
+            else:
+                turnRight += 1
+        if(noWallFront):
+            forwardClear += 1
+        if(turnLockOff == 2):
+            turnLock = 0    
         if(turnWindow == 10):
             turnStop = 0
             turnLeft = 0
+            turnRight = 0
             turnWindow = 0
             turnLockOff = 0
-        print(wallLeft)
+            forwardClear = 0
+        print("wallFront = " + str(wallFront))
+        # print("wallLeft = " + str(wallLeft))
+        # print("wallRight = " + str(wallRight))
+        # print(isWallLeft)
         wallFront = 0
         wallLeft = 0
         wallRight = 0
