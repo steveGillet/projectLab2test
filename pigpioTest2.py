@@ -106,4 +106,5 @@ while True:
         GPIO.output(rightLED, 1)
         if(not wallFront):
             state = "forward"
+    print(rpWidth)
     time.sleep(1)
