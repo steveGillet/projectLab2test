@@ -88,9 +88,9 @@ while True:
             turnWindow = 0
             turnLockOff = 0
             forwardClear = 0
-        print("wallFront = " + str(wallFront))
+        # print("wallFront = " + str(wallFront))
         # print("wallLeft = " + str(wallLeft))
-        # print("wallRight = " + str(wallRight))
+        print("wallRight = " + str(wallRight))
         # print(isWallLeft)
         wallFront = 0
         wallLeft = 0
