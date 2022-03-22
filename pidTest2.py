@@ -33,8 +33,7 @@ GPIO.setup(enB2, GPIO.OUT)
 K = 0.98
 Kn = 1 - K
 
-timeDiff = 0.02
-iTerm = 0
+timeDiff = .02
 
 aX = mpu.acceleration[0]
 aY = mpu.acceleration[1]
@@ -88,6 +87,8 @@ class pidC:
 
         return output
 
+initialX = lastX
+
 while True:
     aX = mpu.acceleration[0]
     aY = mpu.acceleration[1]
@@ -111,11 +112,12 @@ while True:
 
     lastX = K * (lastX + gXd) + (Kn * angleX)
 
-    pid = pidC(P=-78.5, I=1.0, D=1.0)
+    pid = pidC(P=-80, I=1.0, D=1.0)
+    pid.setTarget(initialX)
     pidX = pid.step(lastX)
-
-    if(pidX > 0.0): 
-        pidSpeed = float(pidX)
+    if(pidX > 0.0):
+        print("forward")
+        pidSpeed = np.clip(np.absolute(pidX), 0, 100)
         GPIO.output(enA1, 0)
         GPIO.output(enB1, 1)
         GPIO.output(enA2, 0)
@@ -123,8 +125,9 @@ while True:
         pwm1Set.ChangeDutyCycle(pidSpeed)
         pwm2Set.ChangeDutyCycle(pidSpeed)
 
-    elif(pidX < 0.0): 
-        pidSpeed = -float(pidX)
+    elif(pidX < 0.0):
+        print("backward")
+        pidSpeed = np.clip(np.absolute(pidX), 0, 100)
         GPIO.output(enA1, 1)
         GPIO.output(enB1, 0)
         GPIO.output(enA2, 1)
@@ -139,7 +142,8 @@ while True:
         GPIO.output(enB2, 0)
         pwm1Set.ChangeDutyCycle(0)
         pwm2Set.ChangeDutyCycle(0)
-
+        
+    # print("Target: " + str(pid.target))
     print(lastX, pidX)    
-    time.sleep(.02)
+    time.sleep(1)
         
