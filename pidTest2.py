@@ -33,7 +33,7 @@ GPIO.setup(enB2, GPIO.OUT)
 K = 0.98
 Kn = 1 - K
 
-timeDiff = .02
+timeDiff = .01
 
 aX = mpu.acceleration[0]
 aY = mpu.acceleration[1]
@@ -76,18 +76,24 @@ class pidC:
     def setTarget(self, newTarget):
         self.target = newTarget
         self.integrator = 0
+        self.dt = 0
 
     def step(self, currentValue):
         error = currentValue - self.target
 
-        output = (self.KP * error + self.KI * self.integrator + self.KD * (error - self.lastError))
+        output = (self.KP * error + self.KI * self.integrator + self.KD * error / self.dt)
 
         self.lastError = error
-        self.integrator += error
+        self.dt += timeDiff
+        self.integrator += error * self.dt
 
         return output
 
 initialX = lastX
+
+pid = pidC(P=17, I=100, D=0.8)
+
+pid.setTarget(initialX)
 
 while True:
     aX = mpu.acceleration[0]
@@ -112,16 +118,18 @@ while True:
 
     lastX = K * (lastX + gXd) + (Kn * angleX)
 
-    pid = pidC(P=-80, I=1.0, D=1.0)
-    pid.setTarget(initialX)
+    if(np.absolute(initialX-lastX) < .2):
+        pid.setTarget(initialX)
+
     pidX = pid.step(lastX)
+    
     if(pidX > 0.0):
         print("forward")
         pidSpeed = np.clip(np.absolute(pidX), 0, 100)
-        GPIO.output(enA1, 0)
-        GPIO.output(enB1, 1)
-        GPIO.output(enA2, 0)
-        GPIO.output(enB2, 1)
+        GPIO.output(enA1, 1)
+        GPIO.output(enB1, 0)
+        GPIO.output(enA2, 1)
+        GPIO.output(enB2, 0)
         pwm1Set.ChangeDutyCycle(pidSpeed)
         pwm2Set.ChangeDutyCycle(pidSpeed)
 
@@ -145,5 +153,5 @@ while True:
         
     # print("Target: " + str(pid.target))
     print(lastX, pidX)    
-    time.sleep(1)
+    time.sleep(timeDiff)
         
